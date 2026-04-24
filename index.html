@@ -254,6 +254,36 @@
             margin-bottom: 30px;
             color: #ccc;
         }
+
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .countdown-overlay.show {
+            display: flex;
+        }
+
+        .countdown-number {
+            font-size: 15rem;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 0 0 50px rgba(243, 156, 18, 0.8);
+            animation: countPulse 1s infinite;
+        }
+
+        @keyframes countPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
     </style>
 </head>
 <body>
@@ -282,7 +312,7 @@
         <div class="game-area">
             <div class="track" id="track">
                 <div class="character police" id="police">🚔</div>
-                <div class="character thief" id="thief">👮</div>
+                <div class="character thief" id="thief">🦹</div>
             </div>
 
             <div class="letters-container" id="letters-container">
@@ -306,6 +336,10 @@
                 <strong>规则：</strong>小偷每秒自动向前走一格。当警察和小偷之间没有字母时，你赢了！如果小偷到达终点，你输了！
             </p>
         </div>
+    </div>
+
+    <div class="countdown-overlay" id="countdown-overlay">
+        <div class="countdown-number" id="countdown-number">3</div>
     </div>
 
     <div class="game-over-overlay" id="game-over-overlay">
@@ -343,6 +377,8 @@
         const gameContentEl = document.getElementById('game-over-content');
         const gameTitleEl = document.getElementById('game-over-title');
         const gameMessageEl = document.getElementById('game-over-message');
+        const countdownOverlayEl = document.getElementById('countdown-overlay');
+        const countdownNumberEl = document.getElementById('countdown-number');
 
         function generateLetters() {
             const letters = [];
@@ -470,32 +506,58 @@
                 letters: generateLetters(),
                 timerInterval: null,
                 thiefInterval: null,
+                countdownInterval: null,
                 elapsedTime: 0,
-                maxLetters: 18
+                maxLetters: 18,
+                isCountingDown: true
             };
 
             startBtnEl.style.display = 'none';
             restartBtnEl.style.display = 'inline-block';
             gameOverlayEl.classList.remove('show');
+            countdownOverlayEl.classList.remove('show');
 
             updateDisplay();
 
-            gameState.timerInterval = setInterval(() => {
-                gameState.elapsedTime++;
-                timerEl.textContent = gameState.elapsedTime;
-            }, 1000);
+            let countdown = 3;
+            countdownNumberEl.textContent = countdown;
+            countdownOverlayEl.classList.add('show');
 
-            gameState.thiefInterval = setInterval(moveThief, 1000);
+            gameState.countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownNumberEl.textContent = countdown;
+                } else {
+                    clearInterval(gameState.countdownInterval);
+                    gameState.countdownInterval = null;
+                    countdownOverlayEl.classList.remove('show');
+                    gameState.isCountingDown = false;
+
+                    gameState.timerInterval = setInterval(() => {
+                        gameState.elapsedTime++;
+                        timerEl.textContent = gameState.elapsedTime;
+                    }, 1000);
+
+                    gameState.thiefInterval = setInterval(moveThief, 1000);
+                }
+            }, 1000);
         }
 
         function stopGame() {
             gameState.isRunning = false;
             if (gameState.timerInterval) {
                 clearInterval(gameState.timerInterval);
+                gameState.timerInterval = null;
             }
             if (gameState.thiefInterval) {
                 clearInterval(gameState.thiefInterval);
+                gameState.thiefInterval = null;
             }
+            if (gameState.countdownInterval) {
+                clearInterval(gameState.countdownInterval);
+                gameState.countdownInterval = null;
+            }
+            countdownOverlayEl.classList.remove('show');
         }
 
         function restartGame() {
