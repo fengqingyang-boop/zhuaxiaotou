@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>警察抓小偷</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 1000px;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .track {
+            position: relative;
+            height: 120px;
+            background: linear-gradient(90deg, #2d2d44, #4a4a6a);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .character {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            transition: left 0.3s ease;
+            z-index: 10;
+        }
+
+        .police {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: #fff;
+            border: 3px solid #1abc9c;
+        }
+
+        .thief {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: #fff;
+            border: 3px solid #f39c12;
+        }
+
+        .letters-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            min-height: 80px;
+        }
+
+        .letter-box {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .letter-box.active {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(245, 87, 108, 0.8);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1.1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.2rem;
+            height: 30px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .message.correct {
+            color: #2ecc71;
+        }
+
+        .message.wrong {
+            color: #e74c3c;
+        }
+
+        .controls {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: #fff;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(56, 239, 125, 0.4);
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: #fff;
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #f39c12;
+        }
+
+        .instructions p {
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .game-over-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .game-over-overlay.show {
+            display: flex;
+        }
+
+        .game-over-content {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            border: 2px solid #f39c12;
+            max-width: 400px;
+        }
+
+        .game-over-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .game-over-content.win h2 {
+            color: #2ecc71;
+        }
+
+        .game-over-content.lose h2 {
+            color: #e74c3c;
+        }
+
+        .game-over-content p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🚔 警察抓小偷 👮</h1>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">警察位置</div>
+                <div class="info-value" id="police-pos">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">小偷位置</div>
+                <div class="info-value" id="thief-pos">18</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">剩余字母</div>
+                <div class="info-value" id="letters-left">18</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">时间</div>
+                <div class="info-value" id="timer">0</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="track" id="track">
+                <div class="character police" id="police">🚔</div>
+                <div class="character thief" id="thief">👮</div>
+            </div>
+
+            <div class="letters-container" id="letters-container">
+            </div>
+
+            <div class="message" id="message">按键盘上显示的字母来前进！</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-start" id="start-btn" onclick="startGame()">开始游戏</button>
+            <button class="btn btn-restart" id="restart-btn" onclick="restartGame()" style="display:none;">重新开始</button>
+        </div>
+
+        <div class="instructions">
+            <h3>🎮 游戏说明</h3>
+            <p>
+                <strong>目标：</strong>在小偷逃到终点之前抓住他！<br><br>
+                <strong>操作：</strong>观察屏幕上显示的字母序列，当前需要按下的字母会高亮显示。<br>
+                - 按对了 → 警察前进一格<br>
+                - 按错了 → 警察后退一格<br><br>
+                <strong>规则：</strong>小偷每秒自动向前走一格。当警察和小偷之间没有字母时，你赢了！如果小偷到达终点，你输了！
+            </p>
+        </div>
+    </div>
+
+    <div class="game-over-overlay" id="game-over-overlay">
+        <div class="game-over-content" id="game-over-content">
+            <h2 id="game-over-title">游戏结束</h2>
+            <p id="game-over-message">感谢游玩！</p>
+            <button class="btn btn-restart" onclick="restartGame()">再来一局</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isRunning: false,
+            policePos: 0,
+            thiefPos: 18,
+            letters: [],
+            timerInterval: null,
+            thiefInterval: null,
+            elapsedTime: 0,
+            maxLetters: 18
+        };
+
+        const policeEl = document.getElementById('police');
+        const thiefEl = document.getElementById('thief');
+        const trackEl = document.getElementById('track');
+        const lettersContainerEl = document.getElementById('letters-container');
+        const policePosEl = document.getElementById('police-pos');
+        const thiefPosEl = document.getElementById('thief-pos');
+        const lettersLeftEl = document.getElementById('letters-left');
+        const timerEl = document.getElementById('timer');
+        const messageEl = document.getElementById('message');
+        const startBtnEl = document.getElementById('start-btn');
+        const restartBtnEl = document.getElementById('restart-btn');
+        const gameOverlayEl = document.getElementById('game-over-overlay');
+        const gameContentEl = document.getElementById('game-over-content');
+        const gameTitleEl = document.getElementById('game-over-title');
+        const gameMessageEl = document.getElementById('game-over-message');
+
+        function generateLetters() {
+            const letters = [];
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            for (let i = 0; i < gameState.maxLetters; i++) {
+                const randomIndex = Math.floor(Math.random() * alphabet.length);
+                letters.push(alphabet[randomIndex]);
+            }
+            return letters;
+        }
+
+        function updateDisplay() {
+            policePosEl.textContent = gameState.policePos;
+            thiefPosEl.textContent = gameState.thiefPos;
+            lettersLeftEl.textContent = gameState.thiefPos - gameState.policePos;
+            timerEl.textContent = gameState.elapsedTime;
+
+            const trackWidth = trackEl.offsetWidth - 60;
+            
+            policeEl.style.left = (gameState.policePos / gameState.maxLetters) * trackWidth + 'px';
+            thiefEl.style.left = (gameState.thiefPos / gameState.maxLetters) * trackWidth + 'px';
+
+            renderLetters();
+        }
+
+        function renderLetters() {
+            lettersContainerEl.innerHTML = '';
+            
+            const start = gameState.policePos;
+            const end = gameState.thiefPos;
+            
+            if (start >= end) return;
+
+            for (let i = start; i < end; i++) {
+                const letterBox = document.createElement('div');
+                letterBox.className = 'letter-box';
+                
+                if (i === start) {
+                    letterBox.classList.add('active');
+                }
+                
+                letterBox.textContent = gameState.letters[i];
+                lettersContainerEl.appendChild(letterBox);
+            }
+        }
+
+        function showMessage(text, type = 'normal') {
+            messageEl.textContent = text;
+            messageEl.className = 'message';
+            if (type === 'correct') {
+                messageEl.classList.add('correct');
+            } else if (type === 'wrong') {
+                messageEl.classList.add('wrong');
+            }
+
+            setTimeout(() => {
+                messageEl.textContent = '按键盘上显示的字母来前进！';
+                messageEl.className = 'message';
+            }, 1000);
+        }
+
+        function handleKeyPress(e) {
+            if (!gameState.isRunning) return;
+
+            const key = e.key.toUpperCase();
+            
+            if (key.length !== 1 || !/[A-Z]/.test(key)) {
+                return;
+            }
+
+            const currentLetterIndex = gameState.policePos;
+            const currentLetter = gameState.letters[currentLetterIndex];
+
+            if (key === currentLetter) {
+                gameState.policePos++;
+                showMessage('✓ 正确！警察前进一格！', 'correct');
+            } else {
+                if (gameState.policePos > 0) {
+                    gameState.policePos--;
+                }
+                showMessage('✗ 错误！警察后退一格！', 'wrong');
+            }
+
+            updateDisplay();
+            checkGameStatus();
+        }
+
+        function moveThief() {
+            if (!gameState.isRunning) return;
+            
+            gameState.thiefPos++;
+            updateDisplay();
+            checkGameStatus();
+        }
+
+        function checkGameStatus() {
+            if (gameState.policePos >= gameState.thiefPos) {
+                gameWin();
+            } else if (gameState.thiefPos > gameState.maxLetters) {
+                gameLose();
+            }
+        }
+
+        function gameWin() {
+            stopGame();
+            gameContentEl.className = 'game-over-content win';
+            gameTitleEl.textContent = '🎉 恭喜你赢了！';
+            gameMessageEl.textContent = `用时 ${gameState.elapsedTime} 秒成功抓住小偷！`;
+            gameOverlayEl.classList.add('show');
+        }
+
+        function gameLose() {
+            stopGame();
+            gameContentEl.className = 'game-over-content lose';
+            gameTitleEl.textContent = '💀 游戏结束！';
+            gameMessageEl.textContent = `小偷逃跑了！用时 ${gameState.elapsedTime} 秒`;
+            gameOverlayEl.classList.add('show');
+        }
+
+        function startGame() {
+            gameState = {
+                isRunning: true,
+                policePos: 0,
+                thiefPos: gameState.maxLetters,
+                letters: generateLetters(),
+                timerInterval: null,
+                thiefInterval: null,
+                elapsedTime: 0,
+                maxLetters: 18
+            };
+
+            startBtnEl.style.display = 'none';
+            restartBtnEl.style.display = 'inline-block';
+            gameOverlayEl.classList.remove('show');
+
+            updateDisplay();
+
+            gameState.timerInterval = setInterval(() => {
+                gameState.elapsedTime++;
+                timerEl.textContent = gameState.elapsedTime;
+            }, 1000);
+
+            gameState.thiefInterval = setInterval(moveThief, 1000);
+        }
+
+        function stopGame() {
+            gameState.isRunning = false;
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            if (gameState.thiefInterval) {
+                clearInterval(gameState.thiefInterval);
+            }
+        }
+
+        function restartGame() {
+            stopGame();
+            startGame();
+        }
+
+        document.addEventListener('keydown', handleKeyPress);
+
+        window.onload = function() {
+            gameState.letters = generateLetters();
+            updateDisplay();
+        };
+    </script>
+</body>
+</html>
